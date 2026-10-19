@@ -72,7 +72,7 @@ You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RG
 
 Keep a copy of your old `launch.ini` and driver so you can switch back.
 
-Release 1.1 has the files under their old names, `CUsbEnet.xex` and `CUsbEnet-acksmall.xex`. They are the same driver: rename them, or use that name in `launch.ini`.
+Releases from 1.1.1 on use these names. Release 1.1 has the same driver under its old names, `CUsbEnet.xex` and `CUsbEnet-acksmall.xex`.
 
 ## Which file to use
 
