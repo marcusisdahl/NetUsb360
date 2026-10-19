@@ -1,27 +1,44 @@
 <p align="center">
-  <img src="docs/images/logo.png" alt="CUsbEnet: USB Ethernet for homebrew Xbox 360" width="480">
+  <img src="docs/images/logo.png" alt="UsbNet360: USB Ethernet for homebrew Xbox 360" width="480">
 </p>
 
 <p align="center">
   <b>Use a USB Ethernet adapter as the network connection on a homebrew Xbox 360.</b>
+  <br>
+  <sub>A faster fork of <a href="https://github.com/proferabg/CUsbEnet">CUsbEnet</a> by proferabg. See <a href="#what-this-fork-changes">what this fork changes</a>.</sub>
 </p>
 
 <p align="center">
-  <img src="docs/images/how-it-works.png" alt="PC connects over Ethernet to a USB Ethernet adapter, which plugs into the Xbox's USB 2.0 port. CUsbEnet drives the adapter and hands traffic to the Xbox network stack, which FastFTP, Aurora and other apps use." width="800">
+  <img src="docs/images/how-it-works.png" alt="PC connects over Ethernet to a USB Ethernet adapter, which plugs into the Xbox's USB 2.0 port. UsbNet360 drives the adapter and hands traffic to the Xbox network stack, which FastFTP, Aurora and other apps use." width="800">
 </p>
 
-CUsbEnet is a driver plugin. Once it is loaded, a supported USB Ethernet adapter works like the console's own network port: Aurora, FTP servers, games and other apps use it without any changes.
+UsbNet360 is a driver plugin. Once it is loaded, a supported USB Ethernet adapter works like the console's own network port: Aurora, FTP servers, games and other apps use it without any changes.
 
 Version 1.1 is tuned for speed. Together with **[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP)**, it is the fastest way we know of to copy files to an Xbox 360 over FTP: about **28 MiB/s** measured on uploads, against about 19.5 MiB/s with Aurora's built-in FTP over the same adapter and about 10.5 MiB/s with normal FTP over the console's own 100 Mbit port.
 
 <p align="center">
-  <img src="docs/images/speed.png" alt="FTP upload speed from PC to Xbox: normal FTP over the Xbox's own 100 Mbit port at most 10.5 MiB/s, Aurora's built-in FTP over the USB adapter 19.5 MiB/s, FastFTP with CUsbEnet 1.1 acksmall 28 MiB/s; for comparison, the DVD drive at up to 15.9 MiB/s (12x rated) and the internal hard drive writing at 57.5 MiB/s" width="800">
+  <img src="docs/images/speed.png" alt="FTP upload speed from PC to Xbox: normal FTP over the Xbox's own 100 Mbit port at most 10.5 MiB/s, Aurora's built-in FTP over the USB adapter 19.5 MiB/s, FastFTP with UsbNet360 1.1 acksmall 28 MiB/s; for comparison, the DVD drive at up to 15.9 MiB/s (12x rated) and the internal hard drive writing at 57.5 MiB/s" width="800">
 </p>
 
-CUsbEnet is experimental kernel-level homebrew. Read [Safety](#safety) before you install it.
+UsbNet360 is experimental kernel-level homebrew. Read [Safety](#safety) before you install it.
+
+## What this fork changes
+
+UsbNet360 starts from [CUsbEnet](https://github.com/proferabg/CUsbEnet) 1.0 by proferabg. CUsbEnet ports the USB Ethernet driver Microsoft shipped in early Xbox 360 development recoveries, and adds ASIX and Realtek chipsets to it. All of that work is proferabg's.
+
+This fork, version 1.1, makes uploads to the Xbox about a third faster (27.66 MiB/s against 20.7 MiB/s):
+
+- **Bigger receive transfers.** The AX88179 hands data over in 24 KiB USB transfers instead of 16 KiB.
+- **Batched delivery.** Received packets go to the Xbox network stack in batches instead of one at a time.
+- **The acksmall build.** Small packets, mostly TCP acknowledgements, share a USB transfer instead of each taking its own.
+- **TP-Link UE300 support.** Its USB ID (`2357:0601`) is recognized as an RTL8153.
+- **Test switches** for receive transfer sizes and for speed and CPU logging, all off by default. See [Build switches](#build-switches).
+
+The plugin file keeps its name, `CUsbEnet.xex`, so a `launch.ini` set up for CUsbEnet works unchanged.
 
 ## Contents
 
+- [What this fork changes](#what-this-fork-changes)
 - [Quick start](#quick-start)
 - [Which file to use](#which-file-to-use)
 - [Supported adapters](#supported-adapters)
@@ -38,7 +55,7 @@ CUsbEnet is experimental kernel-level homebrew. Read [Safety](#safety) before yo
 
 You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RGLoader) on dashboard/kernel **17559**, and a [supported adapter](#supported-adapters).
 
-1. Download `CUsbEnet.xex` from the [Releases page](https://github.com/marcusisdahl/CUsbEnet/releases). See [Which file to use](#which-file-to-use) if you want the faster experimental build.
+1. Download `CUsbEnet.xex` from the [Releases page](https://github.com/marcusisdahl/UsbNet360/releases). See [Which file to use](#which-file-to-use) if you want the faster experimental build.
 2. Copy it to the console, for example to `Hdd:\Plugins\CUsbEnet.xex`.
 3. Load it as the **first** plugin:
    - **DashLaunch:** in `launch.ini`, put it in `plugin1` and move your other plugins down, so it loads before `xbdm.xex`:
@@ -85,13 +102,13 @@ A USB 3.0 or gigabit adapter works, but the Xbox's USB 2.0 port sets the speed l
 
 ## Use it with FastFTP
 
-[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what CUsbEnet delivers. Aurora's built-in FTP can't.
+[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what UsbNet360 delivers. Aurora's built-in FTP can't.
 
 <p align="center">
   <img src="docs/images/fastftp-upload.png" alt="FastFTP receiving an upload at 26 MiB/s, with recent transfers at around 27 MiB/s" width="720">
 </p>
 
-1. Load CUsbEnet as described in [Quick start](#quick-start).
+1. Load UsbNet360 as described in [Quick start](#quick-start).
 2. Start FastFTP from Aurora or your usual launcher (it's an app, not a plugin) and press **A** to start the server.
 3. Connect from FileZilla or another FTP client to the IP address FastFTP shows, with user `xboxftp` and password `xboxftp`.
 
@@ -106,12 +123,12 @@ All results are from one console uploading from PC to Xbox; the adapter rows use
 | Normal FTP, Xbox's own 100 Mbit port (no adapter) | at most about 10.5 MiB/s |
 | Aurora's built-in FTP, CUsbEnet 1.0 | about 19.5 MiB/s |
 | FastFTP network test, CUsbEnet 1.0 | about 20.7 MiB/s |
-| FastFTP network test, CUsbEnet 1.1 acksmall, all data checked | **27.66 MiB/s** |
-| FastFTP upload, CUsbEnet 1.1 acksmall | **about 28 MiB/s** |
+| FastFTP network test, UsbNet360 1.1 acksmall, all data checked | **27.66 MiB/s** |
+| FastFTP upload, UsbNet360 1.1 acksmall | **about 28 MiB/s** |
 
 The maintainer has also seen up to 29 MiB/s FTP uploads with this combination.
 
-For comparison, the console's internal hard drive writes at about 57.5 MiB/s (measured on the same console), so it is not the limit. The 12x DVD drive reads at most about 15.9 MiB/s (rated speed at the outer edge of the disc, not measured), so FastFTP over CUsbEnet copies faster than the console can read a disc.
+For comparison, the console's internal hard drive writes at about 57.5 MiB/s (measured on the same console), so it is not the limit. The 12x DVD drive reads at most about 15.9 MiB/s (rated speed at the outer edge of the disc, not measured), so FastFTP over UsbNet360 copies faster than the console can read a disc.
 
 What changed in 1.1:
 
@@ -125,7 +142,7 @@ More streams, bigger socket buffers and even larger receive transfers made no re
 
 | Problem | What to check |
 |---|---|
-| No network at all | Is CUsbEnet the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
+| No network at all | Is `CUsbEnet.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
 | Nothing happens with a self-built XEX | A build made without `DEVKIT_ONLY=0` is for devkits only. It unloads itself on a retail console. See [Build from source](#build-from-source). |
 | Slow transfers | Use a wired PC connection, not Wi-Fi. Run FastFTP's network test to see whether the network or the disk is the slow part. |
 | Freeze while sending from the Xbox | Go back to the standard `CUsbEnet.xex` and report it with your adapter and build. |
@@ -134,7 +151,7 @@ Driver log messages go to the debug output. You can read them with xbWatson when
 
 ## Safety
 
-- CUsbEnet runs inside the Xbox kernel and uses fixed memory addresses for **dashboard 17559**. Don't use it on any other kernel.
+- UsbNet360 runs inside the Xbox kernel and uses fixed memory addresses for **dashboard 17559**. Don't use it on any other kernel.
 - A driver bug can freeze the console. Keep your previous working setup so you can switch back.
 - Installing the driver doesn't touch the NAND. To remove it, take it out of `launch.ini` or `rgloader.ini`.
 - Before trusting a new or self-built build with your files, check it with FastFTP's network test using the **All data** check.
@@ -144,7 +161,7 @@ Driver log messages go to the debug output. You can read them with xbWatson when
 You need Visual Studio with the Xbox 360 SDK (XDK) integration and the `xkelib` submodule. The SDK isn't included.
 
 ```text
-git clone --recurse-submodules https://github.com/marcusisdahl/CUsbEnet.git
+git clone --recurse-submodules https://github.com/marcusisdahl/UsbNet360.git
 ```
 
 1. Open `CUsbEnet.sln` and select **Release | Xbox 360**.
@@ -179,7 +196,7 @@ The **acksmall** build is `DEVKIT_ONLY=0`, `USBENET_AX88179_TX_AGGREGATION=1`, `
 
 ## Branches and history
 
-`main` holds the current driver, and [Releases](https://github.com/marcusisdahl/CUsbEnet/releases) hold the builds. The 1.1 work came in through [PR #1](https://github.com/marcusisdahl/CUsbEnet/pull/1) and a follow-up branch, and both are now merged.
+`main` holds the current driver, and [Releases](https://github.com/marcusisdahl/UsbNet360/releases) hold the builds. The 1.1 work came in through [PR #1](https://github.com/marcusisdahl/UsbNet360/pull/1) and a follow-up branch, and both are now merged.
 
 These experiment branches were removed on 13 October 2026. You can restore one with `git push origin <commit>:refs/heads/<name>`:
 
@@ -192,8 +209,8 @@ These experiment branches were removed on 13 October 2026. You can restore one w
 
 ## License and credits
 
-CUsbEnet is licensed under the GNU General Public License, version 2 only (**GPL-2.0-only**). See [LICENSE](LICENSE).
+UsbNet360 is licensed under the GNU General Public License, version 2 only (**GPL-2.0-only**), the same as CUsbEnet. See [LICENSE](LICENSE).
 
-This is a fork of [proferabg/CUsbEnet](https://github.com/proferabg/CUsbEnet), a port of the USB Ethernet driver Microsoft shipped in early Xbox 360 development recoveries, with added chipset support. Hardware setup was developed with reference to the GPL-2.0 Linux USB Ethernet drivers, including `r8152`. Keep GPL notices, SPDX identifiers and attribution when you modify or redistribute the source.
+UsbNet360 is a fork of [proferabg/CUsbEnet](https://github.com/proferabg/CUsbEnet) by proferabg: a port of the USB Ethernet driver Microsoft shipped in early Xbox 360 development recoveries, with added chipset support. The driver's source files keep the CUsbEnet name. The `xkelib` submodule comes from proferabg's fork of xkelib. Hardware setup was developed with reference to the GPL-2.0 Linux USB Ethernet drivers, including `r8152`. Keep GPL notices, SPDX identifiers and attribution when you modify or redistribute the source.
 
 This project is not affiliated with or endorsed by Microsoft, TP-Link, ASIX Electronics or Realtek Semiconductor.
