@@ -28,7 +28,7 @@
   <text x="516" y="74" font-size="18" font-weight="700" fill="#8FA6BA">Xbox 360</text>
 
   <rect x="516" y="112" width="128" height="116" rx="16" fill="#123A3A" stroke="#3ED9BC" stroke-width="2.5"/>
-  <text x="580" y="160" text-anchor="middle" font-size="20" font-weight="800" fill="#3ED9BC" font-style="italic">CUsbEnet</text>
+  <text x="580" y="160" text-anchor="middle" font-size="18" font-weight="800" fill="#3ED9BC" font-style="italic">UsbNet360</text>
   <text x="580" y="186" text-anchor="middle" font-size="14" fill="#B7C7D6">driver plugin</text>
   <text x="580" y="206" text-anchor="middle" font-size="14" fill="#B7C7D6">(launch.ini)</text>
 
