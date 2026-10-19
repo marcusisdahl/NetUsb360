@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/how-it-works.png" alt="PC connects over Ethernet to a USB Ethernet adapter, which plugs into the Xbox's USB 2.0 port. UsbNet360 drives the adapter and hands traffic to the Xbox network stack, which FastFTP, Aurora and other apps use." width="800">
+  <img src="docs/images/how-it-works.png" alt="PC connects over Ethernet to a USB Ethernet adapter, which plugs into the Xbox's USB 2.0 port. UsbNet360 drives the adapter and hands traffic to the Xbox network stack, which FastFTP360, Aurora and other apps use." width="800">
 </p>
 
 UsbNet360 is a driver plugin. Once it is loaded, a supported USB Ethernet adapter works like the console's own network port: Aurora, FTP servers, games and other apps use it without any changes.
 
-Version 1.1 is tuned for speed. Together with **[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP)**, it is the fastest way we know of to copy files to an Xbox 360 over FTP: about **28 MiB/s** measured on uploads, against about 19.5 MiB/s with Aurora's built-in FTP over the same adapter and about 10.5 MiB/s with normal FTP over the console's own 100 Mbit port.
+Version 1.1 is tuned for speed. Together with **[FastFTP360](https://github.com/marcusisdahl/FastFTP360)**, it is the fastest way we know of to copy files to an Xbox 360 over FTP: about **28 MiB/s** measured on uploads, against about 19.5 MiB/s with Aurora's built-in FTP over the same adapter and about 10.5 MiB/s with normal FTP over the console's own 100 Mbit port.
 
 <p align="center">
-  <img src="docs/images/speed.png" alt="FTP upload speed from PC to Xbox: normal FTP over the Xbox's own 100 Mbit port at most 10.5 MiB/s, Aurora's built-in FTP over the USB adapter 19.5 MiB/s, FastFTP with UsbNet360 1.1 acksmall 28 MiB/s; for comparison, the DVD drive at up to 15.9 MiB/s (12x rated) and the internal hard drive writing at 57.5 MiB/s" width="800">
+  <img src="docs/images/speed.png" alt="FTP upload speed from PC to Xbox: normal FTP over the Xbox's own 100 Mbit port at most 10.5 MiB/s, Aurora's built-in FTP over the USB adapter 19.5 MiB/s, FastFTP360 with UsbNet360 1.1 acksmall 28 MiB/s; for comparison, the DVD drive at up to 15.9 MiB/s (12x rated) and the internal hard drive writing at 57.5 MiB/s" width="800">
 </p>
 
 UsbNet360 is experimental kernel-level homebrew. Read [Safety](#safety) before you install it.
@@ -42,7 +42,7 @@ The plugin file is `UsbNet360.xex`. Coming from CUsbEnet? Put `UsbNet360.xex` in
 - [Quick start](#quick-start)
 - [Which file to use](#which-file-to-use)
 - [Supported adapters](#supported-adapters)
-- [Use it with FastFTP](#use-it-with-fastftp)
+- [Use it with FastFTP360](#use-it-with-fastftp360)
 - [Speed](#speed)
 - [Troubleshooting](#troubleshooting)
 - [Safety](#safety)
@@ -68,7 +68,7 @@ You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RG
 
    - **RGLoader:** make it the first plugin entry in `rgloader.ini`.
 4. Plug the adapter into a USB port on the Xbox, connect it to your router or switch with a network cable, and restart the console.
-5. Aurora, FastFTP and your other apps now use the adapter. The IP address they show comes from your router as usual.
+5. Aurora, FastFTP360 and your other apps now use the adapter. The IP address they show comes from your router as usual.
 
 Keep a copy of your old `launch.ini` and driver so you can switch back.
 
@@ -102,19 +102,19 @@ The driver picks the chipset from the adapter's USB IDs, not its brand name. Che
 
 A USB 3.0 or gigabit adapter works, but the Xbox's USB 2.0 port sets the speed limit. In practice, about 28 MiB/s is the most this path delivers.
 
-## Use it with FastFTP
+## Use it with FastFTP360
 
-[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what UsbNet360 delivers. Aurora's built-in FTP can't.
+[FastFTP360](https://github.com/marcusisdahl/FastFTP360) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what UsbNet360 delivers. Aurora's built-in FTP can't.
 
 <p align="center">
-  <img src="docs/images/fastftp-upload.png" alt="FastFTP receiving an upload at 26 MiB/s, with recent transfers at around 27 MiB/s" width="720">
+  <img src="docs/images/fastftp-upload.png" alt="FastFTP360 receiving an upload at 26 MiB/s, with recent transfers at around 27 MiB/s" width="720">
 </p>
 
 1. Load UsbNet360 as described in [Quick start](#quick-start).
-2. Start FastFTP from Aurora or your usual launcher (it's an app, not a plugin) and press **A** to start the server.
-3. Connect from FileZilla or another FTP client to the IP address FastFTP shows, with user `xboxftp` and password `xboxftp`.
+2. Start FastFTP360 from Aurora or your usual launcher (it's an app, not a plugin) and press **A** to start the server.
+3. Connect from FileZilla or another FTP client to the IP address FastFTP360 shows, with user `xboxftp` and password `xboxftp`.
 
-FastFTP's network test also shows whether the network, the disk or the FTP client is holding back your speed.
+FastFTP360's network test also shows whether the network, the disk or the FTP client is holding back your speed.
 
 ## Speed
 
@@ -124,13 +124,13 @@ All results are from one console uploading from PC to Xbox; the adapter rows use
 |---|---|
 | Normal FTP, Xbox's own 100 Mbit port (no adapter) | at most about 10.5 MiB/s |
 | Aurora's built-in FTP, CUsbEnet 1.0 | about 19.5 MiB/s |
-| FastFTP network test, CUsbEnet 1.0 | about 20.7 MiB/s |
-| FastFTP network test, UsbNet360 1.1 acksmall, all data checked | **27.66 MiB/s** |
-| FastFTP upload, UsbNet360 1.1 acksmall | **about 28 MiB/s** |
+| FastFTP360 network test, CUsbEnet 1.0 | about 20.7 MiB/s |
+| FastFTP360 network test, UsbNet360 1.1 acksmall, all data checked | **27.66 MiB/s** |
+| FastFTP360 upload, UsbNet360 1.1 acksmall | **about 28 MiB/s** |
 
 The maintainer has also seen up to 29 MiB/s FTP uploads with this combination.
 
-For comparison, the console's internal hard drive writes at about 57.5 MiB/s (measured on the same console), so it is not the limit. The 12x DVD drive reads at most about 15.9 MiB/s (rated speed at the outer edge of the disc, not measured), so FastFTP over UsbNet360 copies faster than the console can read a disc.
+For comparison, the console's internal hard drive writes at about 57.5 MiB/s (measured on the same console), so it is not the limit. The 12x DVD drive reads at most about 15.9 MiB/s (rated speed at the outer edge of the disc, not measured), so FastFTP360 over UsbNet360 copies faster than the console can read a disc.
 
 What changed in 1.1:
 
@@ -146,7 +146,7 @@ More streams, bigger socket buffers and even larger receive transfers made no re
 |---|---|
 | No network at all | Is `UsbNet360.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
 | Nothing happens with a self-built XEX | A build made without `DEVKIT_ONLY=0` is for devkits only. It unloads itself on a retail console. See [Build from source](#build-from-source). |
-| Slow transfers | Use a wired PC connection, not Wi-Fi. Run FastFTP's network test to see whether the network or the disk is the slow part. |
+| Slow transfers | Use a wired PC connection, not Wi-Fi. Run FastFTP360's network test to see whether the network or the disk is the slow part. |
 | Freeze while sending from the Xbox | Go back to the standard `UsbNet360.xex` and report it with your adapter and build. |
 
 Driver log messages go to the debug output. You can read them with xbWatson when `xbdm.xex` is loaded.
@@ -156,7 +156,7 @@ Driver log messages go to the debug output. You can read them with xbWatson when
 - UsbNet360 runs inside the Xbox kernel and uses fixed memory addresses for **dashboard 17559**. Don't use it on any other kernel.
 - A driver bug can freeze the console. Keep your previous working setup so you can switch back.
 - Installing the driver doesn't touch the NAND. To remove it, take it out of `launch.ini` or `rgloader.ini`.
-- Before trusting a new or self-built build with your files, check it with FastFTP's network test using the **All data** check.
+- Before trusting a new or self-built build with your files, check it with FastFTP360's network test using the **All data** check.
 
 ## Build from source
 
