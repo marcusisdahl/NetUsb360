@@ -34,7 +34,7 @@ This fork, version 1.1, makes uploads to the Xbox about a third faster (27.66 Mi
 - **TP-Link UE300 support.** Its USB ID (`2357:0601`) is recognized as an RTL8153.
 - **Test switches** for receive transfer sizes and for speed and CPU logging, all off by default. See [Build switches](#build-switches).
 
-The plugin file keeps its name, `CUsbEnet.xex`, so a `launch.ini` set up for CUsbEnet works unchanged.
+The plugin file is `UsbNet360.xex`. Coming from CUsbEnet? Put `UsbNet360.xex` in its place in `launch.ini`, and don't load both.
 
 ## Contents
 
@@ -55,14 +55,14 @@ The plugin file keeps its name, `CUsbEnet.xex`, so a `launch.ini` set up for CUs
 
 You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RGLoader) on dashboard/kernel **17559**, and a [supported adapter](#supported-adapters).
 
-1. Download `CUsbEnet.xex` from the [Releases page](https://github.com/marcusisdahl/UsbNet360/releases). See [Which file to use](#which-file-to-use) if you want the faster experimental build.
-2. Copy it to the console, for example to `Hdd:\Plugins\CUsbEnet.xex`.
+1. Download `UsbNet360.xex` from the [Releases page](https://github.com/marcusisdahl/UsbNet360/releases). See [Which file to use](#which-file-to-use) if you want the faster experimental build.
+2. Copy it to the console, for example to `Hdd:\Plugins\UsbNet360.xex`.
 3. Load it as the **first** plugin:
    - **DashLaunch:** in `launch.ini`, put it in `plugin1` and move your other plugins down, so it loads before `xbdm.xex`:
 
      ```ini
      [Plugins]
-     plugin1 = Hdd:\Plugins\CUsbEnet.xex
+     plugin1 = Hdd:\Plugins\UsbNet360.xex
      plugin2 = Hdd:\Plugins\xbdm.xex
      ```
 
@@ -72,16 +72,18 @@ You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RG
 
 Keep a copy of your old `launch.ini` and driver so you can switch back.
 
+Release 1.1 has the files under their old names, `CUsbEnet.xex` and `CUsbEnet-acksmall.xex`. They are the same driver: rename them, or use that name in `launch.ini`.
+
 ## Which file to use
 
 Each release has two builds, both for a **retail** kernel 17559:
 
 | File | What it is | Use it when |
 |---|---|---|
-| `CUsbEnet.xex` | Standard build. All experimental options are off. | You want the safe choice. |
-| `CUsbEnet-acksmall.xex` | Adds **ACK batching**: small packets, mostly TCP acknowledgements, share a USB transfer instead of each taking their own. **Experimental.** | You have an original AX88179 adapter (such as the TP-Link UE306) and want the fastest uploads to the Xbox. |
+| `UsbNet360.xex` | Standard build. All experimental options are off. | You want the safe choice. |
+| `UsbNet360-acksmall.xex` | Adds **ACK batching**: small packets, mostly TCP acknowledgements, share a USB transfer instead of each taking their own. **Experimental.** | You have an original AX88179 adapter (such as the TP-Link UE306) and want the fastest uploads to the Xbox. |
 
-The acksmall build reached 27.66 MiB/s from PC to Xbox with every byte checked. Long, unlimited transfers **from** the Xbox to a PC have not been fully checked yet, and a freeze was seen once in that direction. If your console freezes during downloads from the Xbox, go back to `CUsbEnet.xex`.
+The acksmall build reached 27.66 MiB/s from PC to Xbox with every byte checked. Long, unlimited transfers **from** the Xbox to a PC have not been fully checked yet, and a freeze was seen once in that direction. If your console freezes during downloads from the Xbox, go back to `UsbNet360.xex`.
 
 ## Supported adapters
 
@@ -142,10 +144,10 @@ More streams, bigger socket buffers and even larger receive transfers made no re
 
 | Problem | What to check |
 |---|---|
-| No network at all | Is `CUsbEnet.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
+| No network at all | Is `UsbNet360.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
 | Nothing happens with a self-built XEX | A build made without `DEVKIT_ONLY=0` is for devkits only. It unloads itself on a retail console. See [Build from source](#build-from-source). |
 | Slow transfers | Use a wired PC connection, not Wi-Fi. Run FastFTP's network test to see whether the network or the disk is the slow part. |
-| Freeze while sending from the Xbox | Go back to the standard `CUsbEnet.xex` and report it with your adapter and build. |
+| Freeze while sending from the Xbox | Go back to the standard `UsbNet360.xex` and report it with your adapter and build. |
 
 Driver log messages go to the debug output. You can read them with xbWatson when `xbdm.xex` is loaded.
 
@@ -167,7 +169,7 @@ git clone --recurse-submodules https://github.com/marcusisdahl/UsbNet360.git
 1. Open `CUsbEnet.sln` and select **Release | Xbox 360**.
 2. For a retail console, add **`DEVKIT_ONLY=0`** to the C/C++ preprocessor definitions. Without it, `Main.h` builds for devkits.
 3. The Release configuration copies the XEX to a configured console after building. Turn deployment off if you copy files yourself (`/p:DeploymentType=None` with MSBuild).
-4. Build. The output is `Build\CUsbEnet\CUsbEnet.xex`.
+4. Build. The output is `Build\CUsbEnet\UsbNet360.xex`.
 
 **Visual Studio 2022:** the xkelib step that generates `xamext.lib` and `kernelext.lib` may not run (link error LNK1181). Generate them once from `libraries\xkelib` with the XDK's `lib.exe`:
 

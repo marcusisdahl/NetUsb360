@@ -89,7 +89,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <LinkIncremental>true</LinkIncremental>
     <RemoteRoot>hdd:\</RemoteRoot>
-    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\CUsbEnet.xex</ImageXexOutput>
+    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\UsbNet360.xex</ImageXexOutput>
     <OutDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -104,14 +104,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
-    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\CUsbEnet.xex</ImageXexOutput>
+    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\UsbNet360.xex</ImageXexOutput>
     <OutDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</IntDir>
     <RemoteRoot>hdd:\</RemoteRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
-    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\CUsbEnet.xex</ImageXexOutput>
+    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\UsbNet360.xex</ImageXexOutput>
     <OutDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</IntDir>
     <RemoteRoot>hdd:\</RemoteRoot>
