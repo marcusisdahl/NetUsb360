@@ -14,7 +14,7 @@
 
 UsbNet360 is a driver plugin. Once it is loaded, a supported USB Ethernet adapter works like the console's own network port: Aurora, FTP servers, games and other apps use it without any changes.
 
-Version 1.1 is tuned for speed. Together with **[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP)**, it is the fastest way we know of to copy files to an Xbox 360 over FTP: about **28 MiB/s** measured on uploads, against about 19.5 MiB/s with Aurora's built-in FTP over the same adapter and about 10.5 MiB/s with normal FTP over the console's own 100 Mbit port.
+Version 1.1 is tuned for speed. Together with **[FastFTP360](https://github.com/marcusisdahl/FastFTP360)**, it is the fastest way we know of to copy files to an Xbox 360 over FTP: about **28 MiB/s** measured on uploads, against about 19.5 MiB/s with Aurora's built-in FTP over the same adapter and about 10.5 MiB/s with normal FTP over the console's own 100 Mbit port.
 
 <p align="center">
   <img src="docs/images/speed.png" alt="FTP upload speed from PC to Xbox: normal FTP over the Xbox's own 100 Mbit port at most 10.5 MiB/s, Aurora's built-in FTP over the USB adapter 19.5 MiB/s, FastFTP with UsbNet360 1.1 acksmall 28 MiB/s; for comparison, the DVD drive at up to 15.9 MiB/s (12x rated) and the internal hard drive writing at 57.5 MiB/s" width="800">
@@ -104,7 +104,7 @@ A USB 3.0 or gigabit adapter works, but the Xbox's USB 2.0 port sets the speed l
 
 ## Use it with FastFTP
 
-[FastFTP](https://github.com/marcusisdahl/Xbox360_FastFTP) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what UsbNet360 delivers. Aurora's built-in FTP can't.
+[FastFTP360](https://github.com/marcusisdahl/FastFTP360) is an FTP server for the Xbox 360 made alongside this driver. It writes to the disk **while** the network transfer is still running, so it can keep up with what UsbNet360 delivers. Aurora's built-in FTP can't.
 
 <p align="center">
   <img src="docs/images/fastftp-upload.png" alt="FastFTP receiving an upload at 26 MiB/s, with recent transfers at around 27 MiB/s" width="720">
@@ -177,6 +177,8 @@ git clone --recurse-submodules https://github.com/marcusisdahl/UsbNet360.git
 lib /DEF:xamext21256.0.def /OUT:xamext.lib /MACHINE:PPCBE
 lib /DEF:kernelext21256.0.def /OUT:kernelext.lib /MACHINE:PPCBE
 ```
+
+For the Xbox 360 Homebrew Store, `.\store\package.ps1 -Version <tag>` (needs [7-Zip](https://www.7-zip.org/)) makes `Build\UsbNet360-<version>.7z` with the standard `UsbNet360.xex`, [`store\readme.txt`](store/readme.txt) and the license, which the store unpacks into `Apps\UsbNet360\`, and `Build\UsbNet360-<version>.ini`, the store entry made from [`store\consolemods.ini`](store/consolemods.ini). Pass `-Xex` to package the release's own `UsbNet360.xex` instead of a local build. Attach the 7z to the release.
 
 ## Build switches
 
