@@ -60,17 +60,17 @@ static void __declspec(naked) InvalidateInstructionLine(PVOID Line)
 	}
 }
 
+// Writes the range back to memory and drops it from the instruction cache
 VOID FlushInstructionRange(PVOID Address, DWORD Size)
 {
 	DWORD First = reinterpret_cast<DWORD>(Address) & ~0x7F;
 	DWORD End = reinterpret_cast<DWORD>(Address) + Size;
-	DWORD Line;
 
-	for (Line = First; Line < End; Line += 0x80)
+	for (DWORD Line = First; Line < End; Line += 0x80)
 		__dcbst(0, reinterpret_cast<PVOID>(Line));
 	__sync();
 
-	for (Line = First; Line < End; Line += 0x80)
+	for (DWORD Line = First; Line < End; Line += 0x80)
 		InvalidateInstructionLine(reinterpret_cast<PVOID>(Line));
 	__isync();
 }
