@@ -208,11 +208,11 @@ git clone --recurse-submodules https://github.com/marcusisdahl/NetUsb360.git
 3. The Release configuration copies the XEX to a configured console after building. Turn deployment off if you copy files yourself (`/p:DeploymentType=None` with MSBuild).
 4. Build. The output is `Build\CUsbEnet\NetUsb360.xex`.
 
-**Visual Studio 2022:** the xkelib step that generates `xamext.lib` and `kernelext.lib` may not run (link error LNK1181). Generate them once from `libraries\xkelib` with the XDK's `lib.exe`:
+**Visual Studio 2022:** the xkelib step that generates `xamext.lib` and `kernelext.lib` may not run (link error LNK1181). Generate them once from `libraries\xkelib` with the XDK's `lib.exe`. The project expects them in that folder:
 
 ```text
-lib /DEF:xamext21256.0.def /OUT:xamext.lib /MACHINE:PPCBE
-lib /DEF:kernelext21256.0.def /OUT:kernelext.lib /MACHINE:PPCBE
+lib /DEF:xam\xamext21256.0.def /OUT:xamext.lib /MACHINE:PPCBE
+lib /DEF:kernel\kernelext21256.0.def /OUT:kernelext.lib /MACHINE:PPCBE
 ```
 
 ## Build switches

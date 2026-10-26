@@ -12,4 +12,4 @@ vendor/
 Debug/
 Release/
 Release_LTCG/
-Build/
+Build/*.tlog

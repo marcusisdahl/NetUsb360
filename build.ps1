@@ -42,13 +42,14 @@ foreach ($Name in $Builds.Keys) {
     }
 
     $Build = $Builds[$Name]
-    # MSBuild reads ; as a property separator, so pass it escaped.
-    $Defines = ($Build.Defines -join "%3B")
+    # Quote the list so MSBuild keeps it as one property value; an escaped %3B
+    # would reach cl.exe as one define instead of several.
+    $Defines = ($Build.Defines -join ";")
     $DeploymentType = if ($Deploy) { "CopyToHardDrive" } else { "None" }
 
     Write-Host "Building $($Build.Xex) ($Name): $($Build.Defines -join ', ')"
     & msbuild $Solution /t:Rebuild /m "/p:Configuration=Release" "/p:Platform=Xbox 360" `
-        "/p:NetUsb360Defines=$Defines" "/p:NetUsb360XexName=$($Build.Xex)" "/p:DeploymentType=$DeploymentType"
+        "/p:NetUsb360Defines=`"$Defines`"" "/p:NetUsb360XexName=$($Build.Xex)" "/p:DeploymentType=$DeploymentType"
     if ($LASTEXITCODE -ne 0) {
         throw "Build of $($Build.Xex) failed."
     }
