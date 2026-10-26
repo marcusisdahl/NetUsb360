@@ -1,6 +1,6 @@
 // Made by Xx jAmes t xX
 // This .h is used to edit functions to detour to your own custom one
-// This class dosnt edit the '.text' section
+// The stubs live in .text (see Detour.cpp) so they also run under the original Xbox emulator
 // 
 
 #ifndef __DETOUR_H
@@ -14,6 +14,7 @@ extern DWORD DetourAsmIndex;
 extern CRITICAL_SECTION DetourAsmSection;
 
 VOID PatchInJump(DWORD* Address, void* Dest, BOOL Linked);
+VOID FlushInstructionRange(PVOID Address, DWORD Size);
 DWORD DetourGetModuleImport(HANDLE HModule, HANDLE HImportedModule, DWORD Ordinal);
 
 int Int24ToInt32(int Value);
@@ -75,6 +76,8 @@ private:
 		dwLength += 0x10;
 
 	DoHook:
+		FlushInstructionRange((PVOID)dwStubAddress, dwLength);
+
 		// apply the hook in the function
 		PatchInJump((PDWORD)dwFunctionAddress, pDestFunc, FALSE);
 		return dwLength;
@@ -210,9 +213,7 @@ public:
 		{
 			memcpy(reinterpret_cast<PVOID>(Addr), OriginalAsm, 0x10);
 
-			__dcbst(0, reinterpret_cast<PVOID>(Addr));
-			__sync();
-			__isync();
+			FlushInstructionRange(reinterpret_cast<PVOID>(Addr), 0x10);
 		}
 
 		Addr = 0;

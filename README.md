@@ -33,6 +33,7 @@ This fork, version 1.1, makes uploads to the Xbox about a third faster (27.66 Mi
 - **The acksmall build.** Small packets, mostly TCP acknowledgements, share a USB transfer instead of each taking its own.
 - **TP-Link UE300 support.** Its USB ID (`2357:0601`) is recognized as an RTL8153.
 - **Test switches** for receive transfer sizes and for speed and CPU logging, all off by default. See [Build switches](#build-switches).
+- **Original Xbox games.** Games running in the Xbox 360's original Xbox emulator can use the adapter too, for example when [NetDisc360](https://github.com/marcusisdahl/NetDisc360) streams them from a PC. With release 1.1.1 and older, the console froze or kept showing "Fatal Crash Intercepted!" as soon as such a game started.
 
 The plugin file is `NetUsb360.xex`. Coming from CUsbEnet? Put `NetUsb360.xex` in its place in `launch.ini`, and don't load both. NetUsb360 used to be called UsbNet360: an old `UsbNet360.xex` works the same, so keep it, or rename it and change `launch.ini` to match.
 

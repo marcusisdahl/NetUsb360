@@ -1,6 +1,10 @@
 #include "stdafx.h"
 
-BYTE DetourAsm[0x500] = { 0 };
+// The stubs that call the original functions live in .text. While the
+// original Xbox emulator runs, data pages are no-execute and a stub in .data
+// faults on the first call that reaches the original function.
+#pragma section(".text$detour", read, execute)
+__declspec(allocate(".text$detour")) __declspec(align(128)) BYTE DetourAsm[0x500] = { 0 };
 DWORD DetourAsmIndex;
 CRITICAL_SECTION DetourAsmSection;
 
@@ -44,6 +48,33 @@ void __declspec(naked) SetupCaller()
 	}
 }
 
+// Drop one cache line (r3) from the instruction cache. The inline assembler
+// has no sync/isync, so FlushInstructionRange uses the intrinsics for those.
+static void __declspec(naked) InvalidateInstructionLine(PVOID Line)
+{
+	__asm
+	{
+		li r0, 0
+		icbi r3, r0
+		blr
+	}
+}
+
+// Writes the range back to memory and drops it from the instruction cache
+VOID FlushInstructionRange(PVOID Address, DWORD Size)
+{
+	DWORD First = reinterpret_cast<DWORD>(Address) & ~0x7F;
+	DWORD End = reinterpret_cast<DWORD>(Address) + Size;
+
+	for (DWORD Line = First; Line < End; Line += 0x80)
+		__dcbst(0, reinterpret_cast<PVOID>(Line));
+	__sync();
+
+	for (DWORD Line = First; Line < End; Line += 0x80)
+		InvalidateInstructionLine(reinterpret_cast<PVOID>(Line));
+	__isync();
+}
+
 VOID PatchInJump(DWORD* Address, void* Dest, BOOL Linked)
 {
 	DWORD Bytes[4];
@@ -64,9 +95,7 @@ VOID PatchInJump(DWORD* Address, void* Dest, BOOL Linked)
 	*reinterpret_cast<__int64*>(reinterpret_cast<DWORD>(Address) + 0) = *reinterpret_cast<__int64*>(&Bytes[0]);
 	*reinterpret_cast<__int64*>(reinterpret_cast<DWORD>(Address) + 8) = *reinterpret_cast<__int64*>(&Bytes[2]);
 
-	__dcbst(0, Address);
-	__sync();
-	__isync();
+	FlushInstructionRange(Address, 0x10);
 }
 
 typedef struct _DETOUR_XEX_IMPORT_DESCRIPTOR {

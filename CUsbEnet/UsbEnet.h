@@ -20,6 +20,7 @@ VOID		__fastcall UsbEnetNicSetUnicastAddress(CEnetAddr* Address, DWORD AddressSl
 VOID		__fastcall UsbEnetBeginPowerDownAndClose();
 BOOL		__fastcall UsbEnetIsPowerDownComplete();
 DWORD		__fastcall UsbEnetGetReceiveInFlightCount();
+VOID		__fastcall UsbEnetFlushXmitCompletions();
 VOID		__fastcall UsbEnetAddDevice(PUSBD_DEVICE_NODE DeviceNode);
 VOID		__fastcall UsbEnetRemoveDevice(PUSBD_DEVICE_NODE DeviceNode);
 BOOLEAN		__fastcall UsbEnetMatchDriver(PUSB_INTERFACE_DESCRIPTOR interfaceDescriptor, PUSB_DEVICE_DESCRIPTOR deviceDescriptor, PUSBD_DRIVER_OBJECT driverObject);
