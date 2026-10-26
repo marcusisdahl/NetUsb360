@@ -3,6 +3,7 @@
 
 const BYTE kVendorSpecificClass = 0xFF;
 const BYTE kVendorSpecificSubClass = 0xFF;
+const BYTE kCdcClass = 0x02;
 
 extern USBD_DRIVER_OBJECT g_EthernetUsbdDriverObject;
 

@@ -42,6 +42,7 @@ The plugin file is `NetUsb360.xex`. Coming from CUsbEnet? Put `NetUsb360.xex` in
 - [What this fork changes](#what-this-fork-changes)
 - [Quick start](#quick-start)
 - [Which file to use](#which-file-to-use)
+- [Settings](#settings)
 - [Supported adapters](#supported-adapters)
 - [Use it with FastFTP](#use-it-with-fastftp)
 - [Speed](#speed)
@@ -69,7 +70,7 @@ You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RG
 
    - **RGLoader:** make it the first plugin entry in `rgloader.ini`.
 4. Plug the adapter into a USB port on the Xbox, connect it to your router or switch with a network cable, and restart the console.
-5. Aurora, FastFTP and your other apps now use the adapter. The IP address they show comes from your router as usual.
+5. Aurora, FastFTP and your other apps now use the adapter. The IP address they show comes from your router as usual. From version 1.2, a message on screen says when the adapter is connected, or why it isn't.
 
 Keep a copy of your old `launch.ini` and driver so you can switch back.
 
@@ -86,6 +87,32 @@ Each release has two builds, both for a **retail** kernel 17559:
 
 The acksmall build reached 27.66 MiB/s from PC to Xbox with every byte checked. Long, unlimited transfers **from** the Xbox to a PC have not been fully checked yet, and a freeze was seen once in that direction. If your console freezes during downloads from the Xbox, go back to `NetUsb360.xex`.
 
+From version 1.2 you can also switch ACK batching on or off with `Acksmall` in the [settings file](#settings), without changing the XEX.
+
+## Settings
+
+From version 1.2, NetUsb360 reads an optional `NetUsb360.ini` from the folder the XEX is in (for example `Hdd:\Plugins\`) when the console starts. Releases include a sample file with every setting explained. Without the file, or for a setting the file leaves out, the driver behaves exactly like the XEX you loaded. Restart the console after changing it.
+
+```ini
+[NetUsb360]
+Notify = 1
+StatusFile = 0
+Acksmall = 1
+```
+
+| Setting | Default | What it does |
+|---|---|---|
+| `Notify` | `1` | Shows a message on screen once the adapter is connected, with its link speed. If there is no link after about 45 seconds, the message says why: no adapter, an unsupported adapter (with its USB ID), or no cable. |
+| `StatusFile` | `0` | Keeps `NetUsb360-status.txt` next to the plugin up to date every five seconds: version, kernel, adapter and USB ID, link speed, settings, transfer rate in both directions, and drop and error counts. Useful for bug reports and for checking speed without a debugger. |
+| `Acksmall` | `0`, or `1` in the acksmall XEX | ACK batching. Sets the three settings below together. **Experimental**, see [Which file to use](#which-file-to-use). |
+| `Ax88179TxAggregation` | as `Acksmall` | Part of acksmall: lets the original AX88179 send several packets per USB transfer. **Don't use it alone**: it froze the console in testing. |
+| `CoalesceSmallFrames` | as `Acksmall` | Part of acksmall: lets small packets join a transfer already in progress. |
+| `AggregateSmallOnly` | as `Acksmall` | Part of acksmall: only packets up to 256 bytes share a transfer. |
+
+Use `1` or `0` (`on`/`off`, `yes`/`no` and `true`/`false` work too). Lines starting with `;` are comments. When a setting appears twice, the later line wins, so `Acksmall = 1` followed by `AggregateSmallOnly = 0` turns on everything but that part.
+
+If the XEX is somewhere the driver can't work out, it looks for the file in the root of the internal hard drive (`Hdd:\`) instead.
+
 ## Supported adapters
 
 The driver picks the chipset from the adapter's USB IDs, not its brand name. Check the chipset before you buy: adapters with the same name can use different chips in later revisions.
@@ -100,6 +127,10 @@ The driver picks the chipset from the adapter's USB IDs, not its brand name. Che
 | ASIX AX88178 | `0B95:1780` | | The original devkit adapter chip |
 | Realtek RTL8153 / RTL8153B | `0BDA:8153` | | Hardware versions 3–6 and 8–9 |
 | Realtek RTL8153 | `2357:0601` | **TP-Link UE300** | New in 1.1 |
+| Realtek RTL8153 | `045E:07AB`, `045E:07C6`, `04E8:A101`, `13B1:0041`, `0955:09FF`, `17EF:3062`, `17EF:3069`, `17EF:7205`, `17EF:720C`, `17EF:7214` | Microsoft Surface adapter and dock, Samsung, Linksys USB3GIGV1, NVIDIA SHIELD, Lenovo dongles and docks | New in 1.2, from the Linux `r8152` list. **Not tested yet**: please report whether yours works |
+| ASIX AX88179 family | `0DF6:0072`, `04E8:A100`, `17EF:304B`, `0930:0A13` | Sitecom, Samsung, Lenovo, Toshiba | New in 1.2, from the Linux `ax88179_178a` list. **Not tested yet** |
+
+Is your adapter missing? From version 1.2, the on-screen message and the driver log name the USB ID of an adapter the driver doesn't support. Open an issue with that ID and the adapter's name.
 
 A USB 3.0 or gigabit adapter works, but the Xbox's USB 2.0 port sets the speed limit. In practice, about 28 MiB/s is the most this path delivers.
 
@@ -145,16 +176,17 @@ More streams, bigger socket buffers and even larger receive transfers made no re
 
 | Problem | What to check |
 |---|---|
-| No network at all | Is `NetUsb360.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. |
+| No network at all | Is `NetUsb360.xex` the **first** plugin? Is the adapter's chipset in the [table](#supported-adapters)? Try another USB port. From 1.2, the message on screen after about 45 seconds says what's wrong. |
+| No message on screen at all | The driver didn't load, or it unloaded itself: it only runs on kernel 17559, and a self-built XEX must match your console (see the next row). Check that `Notify` isn't `0` in `NetUsb360.ini`. |
 | Nothing happens with a self-built XEX | A build made without `DEVKIT_ONLY=0` is for devkits only. It unloads itself on a retail console. See [Build from source](#build-from-source). |
 | Slow transfers | Use a wired PC connection, not Wi-Fi. Run FastFTP's network test to see whether the network or the disk is the slow part. |
 | Freeze while sending from the Xbox | Go back to the standard `NetUsb360.xex` and report it with your adapter and build. |
 
-Driver log messages go to the debug output. You can read them with xbWatson when `xbdm.xex` is loaded.
+Driver log messages go to the debug output. You can read them with xbWatson when `xbdm.xex` is loaded. Every build logs the version and build (`standard` or `acksmall`), the kernel, the settings it read and the adapter it found, so include those lines in bug reports. Without a debugger, turn on `StatusFile` and attach `NetUsb360-status.txt` instead.
 
 ## Safety
 
-- NetUsb360 runs inside the Xbox kernel and uses fixed memory addresses for **dashboard 17559**. Don't use it on any other kernel.
+- NetUsb360 runs inside the Xbox kernel and uses fixed memory addresses for **dashboard 17559**. Don't use it on any other kernel. From version 1.2 it checks the kernel version when it loads and unloads itself on any other kernel.
 - A driver bug can freeze the console. Keep your previous working setup so you can switch back.
 - Installing the driver doesn't touch the NAND. To remove it, take it out of `launch.ini` or `rgloader.ini`.
 - Before trusting a new or self-built build with your files, check it with FastFTP's network test using the **All data** check.
@@ -167,21 +199,25 @@ You need Visual Studio with the Xbox 360 SDK (XDK) integration and the `xkelib` 
 git clone --recurse-submodules https://github.com/marcusisdahl/NetUsb360.git
 ```
 
+**Release files:** from a Developer PowerShell for Visual Studio, run `.\build.ps1`. It builds `NetUsb360.xex` and `NetUsb360-acksmall.xex` for retail kernel 17559 with the right switches, and puts them in `Build\Release` with the sample `NetUsb360.ini`. Use `-Variant standard` or `-Variant acksmall` to build one, and `-Deploy` to also copy it to your default console. Before publishing a release, go through the [release test checklist](docs/TESTING.md).
+
+**From Visual Studio:**
+
 1. Open `CUsbEnet.sln` and select **Release | Xbox 360**.
 2. For a retail console, add **`DEVKIT_ONLY=0`** to the C/C++ preprocessor definitions. Without it, `Main.h` builds for devkits.
 3. The Release configuration copies the XEX to a configured console after building. Turn deployment off if you copy files yourself (`/p:DeploymentType=None` with MSBuild).
 4. Build. The output is `Build\CUsbEnet\NetUsb360.xex`.
 
-**Visual Studio 2022:** the xkelib step that generates `xamext.lib` and `kernelext.lib` may not run (link error LNK1181). Generate them once from `libraries\xkelib` with the XDK's `lib.exe`:
+**Visual Studio 2022:** the xkelib step that generates `xamext.lib` and `kernelext.lib` may not run (link error LNK1181). Generate them once from `libraries\xkelib` with the XDK's `lib.exe`. The project expects them in that folder:
 
 ```text
-lib /DEF:xamext21256.0.def /OUT:xamext.lib /MACHINE:PPCBE
-lib /DEF:kernelext21256.0.def /OUT:kernelext.lib /MACHINE:PPCBE
+lib /DEF:xam\xamext21256.0.def /OUT:xamext.lib /MACHINE:PPCBE
+lib /DEF:kernel\kernelext21256.0.def /OUT:kernelext.lib /MACHINE:PPCBE
 ```
 
 ## Build switches
 
-These are compile-time options in `CUsbEnet/Main.h`. Every experimental switch is off by default.
+These are compile-time options in `CUsbEnet/Main.h`. Every experimental switch is off by default. The three transmit switches only set the defaults: `NetUsb360.ini` can change them when the driver loads (see [Settings](#settings)). The receive sizes and logging can only be changed by building.
 
 | Switch | Default | What it does |
 |---|---|---|
@@ -195,7 +231,11 @@ These are compile-time options in `CUsbEnet/Main.h`. Every experimental switch i
 | `USBENET_DEBUG` | `0` | Detailed driver output. Slows the driver down. |
 | `USBENET_CONNECTION_LOGGING` | `0` | Extra connection diagnostics. |
 
-The **acksmall** build is `DEVKIT_ONLY=0`, `USBENET_AX88179_TX_AGGREGATION=1`, `USBENET_COALESCE_TITLE_SMALL_FRAMES=1` and `USBENET_TX_AGGREGATE_SMALL_ONLY=1`.
+The **acksmall** build is `DEVKIT_ONLY=0`, `USBENET_AX88179_TX_AGGREGATION=1`, `USBENET_COALESCE_TITLE_SMALL_FRAMES=1` and `USBENET_TX_AGGREGATE_SMALL_ONLY=1`. `build.ps1` passes these for you through the `NetUsb360Defines` MSBuild property.
+
+**Another kernel:** all fixed addresses are in one table in `CUsbEnet/KernelAddresses.cpp`. Supporting another kernel means finding every one of those addresses for it and adding an entry. The driver refuses to start on a kernel that has no entry.
+
+`tools/check_repo.py` runs on every push and pull request. It checks that every source file is in the project, and that every build switch and setting is documented here.
 
 ## Branches and history
 

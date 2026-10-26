@@ -6,7 +6,11 @@
 #endif
 
 #ifndef VERSION_MINOR
-#define VERSION_MINOR 1
+#define VERSION_MINOR 2
+#endif
+
+#ifndef VERSION_PATCH
+#define VERSION_PATCH 0
 #endif
 
 #ifndef DEVKIT_ONLY
@@ -61,6 +65,22 @@
 #error Choose at most one AX88179 RX transfer size.
 #endif
 
+// Name of the build in the startup line and the status file. The settings
+// file can still change the transmit options at load time.
+#if USBENET_AX88179_TX_AGGREGATION && USBENET_COALESCE_TITLE_SMALL_FRAMES && USBENET_TX_AGGREGATE_SMALL_ONLY
+#define USBENET_BUILD_VARIANT "acksmall"
+#elif USBENET_AX88179_TX_AGGREGATION || USBENET_COALESCE_TITLE_SMALL_FRAMES || USBENET_TX_AGGREGATE_SMALL_ONLY
+#define USBENET_BUILD_VARIANT "custom"
+#else
+#define USBENET_BUILD_VARIANT "standard"
+#endif
+
+#if DEVKIT_ONLY
+#define USBENET_BUILD_KIND "devkit"
+#else
+#define USBENET_BUILD_KIND "retail"
+#endif
+
 #ifndef USBENET_CONNECTION_LOGGING
 #define USBENET_CONNECTION_LOGGING 0
 #endif
@@ -110,6 +130,10 @@ enum USBENET_RECOVERY_REASON {
 #define USBENET_PERF_PRINT(...) ((void)0)
 #endif
 
+// A few lines users need for bug reports (version, kernel, adapter) print in
+// every build, like the performance summary.
+#define USBENET_INFO_PRINT(...) (DbgPrint)(__VA_ARGS__)
+
 #if USBENET_CONNECTION_LOGGING
 #define USBENET_CONNECTION_PRINT(...) (DbgPrint)(__VA_ARGS__)
 #else
@@ -121,6 +145,8 @@ namespace Main {
     extern BOOL Devkit;
     extern BOOL Exiting;
     extern volatile LONG InitState;
+    extern WORD KernelBuild;
+    extern const USBENET_KERNEL_ADDRESSES* Kernel;
     CEnetAddr* GetKernelTitleEthernetAddress();
     CEnetAddr* GetKernelDebugEthernetAddress();
     VOID Init();

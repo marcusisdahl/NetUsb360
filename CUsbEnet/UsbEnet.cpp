@@ -143,6 +143,24 @@ BOOLEAN __fastcall UsbEnetMatchDriver(PUSB_INTERFACE_DESCRIPTOR InterfaceDescrip
 			DbgPrint("[CUsbEnet/Main] AX179A-family device is not exposing the FF/FF/00 vendor interface; USB configuration switching is not implemented.\n");
 	}
 
+	/* Remember the vendor-specific (and CDC) devices offered, so an adapter
+	 * the driver doesn't know can be named on screen and in bug reports. A
+	 * supported adapter's other interfaces don't overwrite its record. */
+	BOOL SameSupportedDevice = g_UsbEnetLastDevice.Seen != 0 && g_UsbEnetLastDevice.Supported && g_UsbEnetLastDevice.VendorId == _byteswap_ushort(DeviceDescriptor->idVendor) && g_UsbEnetLastDevice.ProductId == _byteswap_ushort(DeviceDescriptor->idProduct);
+
+	if ((ClassMatch || InterfaceDescriptor->bInterfaceClass == kCdcClass) && !SameSupportedDevice) {
+		g_UsbEnetLastDevice.VendorId = _byteswap_ushort(DeviceDescriptor->idVendor);
+		g_UsbEnetLastDevice.ProductId = _byteswap_ushort(DeviceDescriptor->idProduct);
+		g_UsbEnetLastDevice.Revision = DeviceRevision;
+		g_UsbEnetLastDevice.Supported = ClassMatch && DeviceMatch;
+		InterlockedExchange(&g_UsbEnetLastDevice.Seen, 1);
+
+		if (ClassMatch && DeviceMatch)
+			USBENET_INFO_PRINT("[NetUsb360] Found %s adapter %04X:%04X rev %04X.\n", Chipset->GetName(), g_UsbEnetLastDevice.VendorId, g_UsbEnetLastDevice.ProductId, DeviceRevision);
+		else
+			USBENET_INFO_PRINT("[NetUsb360] USB device %04X:%04X rev %04X (interface class %02X) is not a supported adapter. Report it with this line if it is a USB Ethernet adapter.\n", g_UsbEnetLastDevice.VendorId, g_UsbEnetLastDevice.ProductId, DeviceRevision, InterfaceDescriptor->bInterfaceClass);
+	}
+
 	if (!ClassMatch || Chipset == NULL)
 		return FALSE;
 

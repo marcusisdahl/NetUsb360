@@ -1,0 +1,20 @@
+name: Checks
+
+# The driver needs the Xbox 360 SDK, which can't run here, so this only runs
+# the repository checks in tools/check_repo.py. Build releases with build.ps1.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 tools/check_repo.py

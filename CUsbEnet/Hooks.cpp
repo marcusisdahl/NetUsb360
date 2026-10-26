@@ -73,8 +73,7 @@ namespace Hooks {
     }
 
     static VOID AttachExistingRetailTitleUser() {
-        static const DWORD KernelNicEmac17559 = 0x801864B8;
-        PLIST_ENTRY Head = reinterpret_cast<PLIST_ENTRY>(KernelNicEmac17559);
+        PLIST_ENTRY Head = reinterpret_cast<PLIST_ENTRY>(Main::Kernel->NicEmac);
 
         if (!MmIsAddressValid(Head) || !MmIsAddressValid(reinterpret_cast<PBYTE>(Head) + sizeof(LIST_ENTRY) - 1)) {
             DbgPrint("[CUsbEnet/Hooks] Retail g_NicEmac user-list head is invalid: head=%p.\n", Head);
@@ -82,7 +81,7 @@ namespace Hooks {
         }
 
         PLIST_ENTRY Link = Head->Flink;
-        DbgPrint("[CUsbEnet/Hooks] Retail g_NicEmac=%p user-list head=%p links=%p/%p.\n", reinterpret_cast<PVOID>(KernelNicEmac17559), Head, Head->Flink, Head->Blink);
+        DbgPrint("[CUsbEnet/Hooks] Retail g_NicEmac=%p user-list head=%p links=%p/%p.\n", reinterpret_cast<PVOID>(Main::Kernel->NicEmac), Head, Head->Flink, Head->Blink);
 
         for (DWORD Index = 0; Link != Head && Index < 16; Index++) {
             if (Link == NULL || !MmIsAddressValid(Link) || !MmIsAddressValid(reinterpret_cast<PBYTE>(Link) + sizeof(LIST_ENTRY) - 1)) {
@@ -126,7 +125,7 @@ namespace Hooks {
             return;
         }
 
-        volatile PCXN_BASE_PARTIAL* XnInstances = reinterpret_cast<volatile PCXN_BASE_PARTIAL*>(0x81D6AF78);
+        volatile PCXN_BASE_PARTIAL* XnInstances = reinterpret_cast<volatile PCXN_BASE_PARTIAL*>(Main::Kernel->XnInstances);
         PCXN_BASE_PARTIAL StandardXn = const_cast<PCXN_BASE_PARTIAL>(XnInstances[0]);
         PCXN_BASE_PARTIAL XbdmXn = const_cast<PCXN_BASE_PARTIAL>(XnInstances[1]);
 
@@ -379,13 +378,13 @@ namespace Hooks {
         NicGetOpt_Detour.SetupDetour(MODULE_KERNEL, 522, NicGetOpt_Hook);
         NicSetOpt_Detour.SetupDetour(MODULE_KERNEL, 523, NicSetOpt_Hook);
 
-        UsbdEhciShutdown_Detour.SetupDetour(Main::Devkit ? 0x80116388 : 0x800E06D0, UsbdEhciShutdown_Hook);
+        UsbdEhciShutdown_Detour.SetupDetour(Main::Kernel->UsbdEhciShutdown, UsbdEhciShutdown_Hook);
         DbgPrint("[CUsbEnet/Hooks] USB power-down hook installed.\n");
 
         // Patch Interface Flags
         DbgPrint("Patching interface flags.\n");
 
-        PDWORD StandardNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Devkit ? 0x81D27614 : 0x81A86C2C);
+        PDWORD StandardNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Kernel->StandardNicDeviceFlags);
 
         OriginalStandardNicDeviceFlags = *StandardNicDeviceFlags;
         *StandardNicDeviceFlags = OriginalStandardNicDeviceFlags | NicInterfaceUsbEnet;
@@ -393,7 +392,7 @@ namespace Hooks {
         DbgPrint("[CUsbEnet/Hooks] Standard NIC flags old=0x%08X new=0x%08X\n", OriginalStandardNicDeviceFlags, *StandardNicDeviceFlags);
 
         if (Main::Devkit) {
-	        PDWORD XbdmNicDeviceFlags = reinterpret_cast<PDWORD>(0x81D27618);
+	        PDWORD XbdmNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Kernel->XbdmNicDeviceFlags);
 
 	        OriginalXbdmNicDeviceFlags = *XbdmNicDeviceFlags;
 	        *XbdmNicDeviceFlags = OriginalXbdmNicDeviceFlags | NicInterfaceUsbEnet;
@@ -413,12 +412,12 @@ namespace Hooks {
         DbgPrint("Unpatching interface flags.\n");
 
         if (InterfaceFlagsPatched) {
-            PDWORD StandardNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Devkit ? 0x81D27614 : 0x81A86C2C);
+            PDWORD StandardNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Kernel->StandardNicDeviceFlags);
 
             *StandardNicDeviceFlags = OriginalStandardNicDeviceFlags;
 
             if (Main::Devkit) {
-                PDWORD XbdmNicDeviceFlags = reinterpret_cast<PDWORD>(0x81D27618);
+                PDWORD XbdmNicDeviceFlags = reinterpret_cast<PDWORD>(Main::Kernel->XbdmNicDeviceFlags);
                 *XbdmNicDeviceFlags = OriginalXbdmNicDeviceFlags;
             }
 
