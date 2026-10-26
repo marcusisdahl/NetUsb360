@@ -34,7 +34,7 @@ This fork, version 1.1, makes uploads to the Xbox about a third faster (27.66 Mi
 - **TP-Link UE300 support.** Its USB ID (`2357:0601`) is recognized as an RTL8153.
 - **Test switches** for receive transfer sizes and for speed and CPU logging, all off by default. See [Build switches](#build-switches).
 
-The plugin file is `NetUsb360.xex`. Coming from CUsbEnet? Put `NetUsb360.xex` in its place in `launch.ini`, and don't load both. NetUsb360 used to be called UsbNet360: an old `UsbNet360.xex` works the same, so rename the file or leave it.
+The plugin file is `NetUsb360.xex`. Coming from CUsbEnet? Put `NetUsb360.xex` in its place in `launch.ini`, and don't load both. NetUsb360 used to be called UsbNet360: an old `UsbNet360.xex` works the same, so keep it, or rename it and change `launch.ini` to match.
 
 ## Contents
 
