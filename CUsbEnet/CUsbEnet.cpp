@@ -268,21 +268,19 @@ static BOOL IsDebugNicUser(CNicUser* User) {
 	return User != NULL && User->AttachInfo.ReceiveFilterMask == DebugReceiveFilterMask;
 }
 
-#if USBENET_COALESCE_TITLE_SMALL_FRAMES
-/* Small retail title frames still go out at once when the pipe is idle; with
- * transfers in flight they aggregate and flush on the next TX completion. */
-static BOOL IsLowLatencyNicUser(CNicUser* User) {
-	return IsDebugNicUser(User);
-}
-#else
 static BOOL IsRetailTitleNicUser(CNicUser* User) {
 	return !Main::Devkit && User != NULL && User->AttachInfo.ReceiveFilterMask == TitleReceiveFilterMask;
 }
 
+/* With CoalesceSmallFrames, small retail title frames still go out at once
+ * when the pipe is idle; with transfers in flight they aggregate and flush on
+ * the next TX completion. Without it, retail title frames are low latency. */
 static BOOL IsLowLatencyNicUser(CNicUser* User) {
+	if (g_UsbEnetSettings.CoalesceSmallFrames)
+		return IsDebugNicUser(User);
+
 	return IsDebugNicUser(User) || IsRetailTitleNicUser(User);
 }
-#endif
 
 static BOOL IsDebugXmitTracker(PXMIT_TRACKER Tracker) {
 	return Tracker != NULL && Tracker->FirstPacket != NULL && IsDebugNicUser(Tracker->FirstPacket->User);
@@ -351,6 +349,17 @@ static VOID PrintThroughputStats(DWORD CurrentTick, PXMIT_TRACKER Trackers, DWOR
 	BOOL HasDataActivity = TxUsbTransferCount != 0 || RxUsbCompletionCount != 0 || TxFrameCount != 0 || RxFrameCount != 0;
 	BOOL HasErrors = DiagnosticTxErrorCount != 0 || DiagnosticRxSubmitErrorCount != 0 || DiagnosticRxErrorCount != 0 || DiagnosticRxParserFailureCount != 0;
 	BOOL PrintStats = HasErrors || TxFrameMbpsX100 > 1000 || RxFrameMbpsX100 > 1000 || (ForceDiagnostics && HasDataActivity);
+
+	// Keep the period's totals for the status file, in every build.
+	g_UsbEnetStatsSnapshot.ElapsedMilliseconds = ElapsedMilliseconds;
+	g_UsbEnetStatsSnapshot.TxFrameMbpsX100 = TxFrameMbpsX100;
+	g_UsbEnetStatsSnapshot.RxFrameMbpsX100 = RxFrameMbpsX100;
+	g_UsbEnetStatsSnapshot.TxFrames = TxFrameCount;
+	g_UsbEnetStatsSnapshot.RxFrames = RxFrameCount;
+	g_UsbEnetStatsSnapshot.TxDrops = TxPacketDropCount + TxBufferDropCount;
+	g_UsbEnetStatsSnapshot.TxErrors = DiagnosticTxErrorCount;
+	g_UsbEnetStatsSnapshot.RxErrors = DiagnosticRxSubmitErrorCount + DiagnosticRxErrorCount + DiagnosticRxParserFailureCount;
+	InterlockedIncrement(&g_UsbEnetStatsSnapshot.Sequence);
 
 	if (PrintStats) {
 		USBENET_PERF_PRINT("[usbenet]: Throughput stats: TX transfers=%u frames=%u frameBytes=%u usbBytes=%u avg=%u.%02u frames/%u bytes title=%u debug=%u packets=%u high=%u trackers=%u high=%u packetDrops=%u bufferDrops=%u waiting=%u queued=%u busy=%u pending=%u/%u; RX inFlight=%u restarts=%u cancelled=%u completions=%u frames=%u frameBytes=%u usbBytes=%u avg=%u.%02u frames/%u bytes\n", TxUsbTransferCount, TxFrameCount, TxFrameBytes, TxUsbBytes, TxFramesPerTransferX100 / 100, TxFramesPerTransferX100 % 100, TxBytesPerTransfer, TxTitleFrameCount, TxDebugFrameCount, TxPacketInUseCount, TxPacketHighWater, ActiveXmitCount, TxTrackerHighWater, TxPacketDropCount, TxBufferDropCount, WaitingTrackerCount, QueuedTrackerCount, BusyTrackerCount, PendingXmitCount, MaximumPendingXmitCount, RxInFlightCount, RxRestartCount, RxCancelledCompletionCount, RxUsbCompletionCount, RxFrameCount, RxFrameBytes, RxUsbBytes, RxFramesPerCompletionX100 / 100, RxFramesPerCompletionX100 % 100, RxBytesPerCompletion);
@@ -1447,11 +1456,10 @@ VOID __fastcall CUsbEnet::NicXmit(CNicUser* User, DWORD Unknown, PVOID Buffer, D
 			if (LowLatencyUser)
 				CanAppend = CanAppend && !ImmediateLowLatency && !IsImmediateLowLatencyXmitTracker(Tracker) && TrackerFrameCount < MaximumDebugFramesPerXmit;
 
-#if USBENET_TX_AGGREGATE_SMALL_ONLY
 			/* Every frame already in the tracker passed this check, so testing
 			 * the first one and the new one keeps the whole transfer small. */
-			CanAppend = CanAppend && Length <= DebugImmediateFrameSize && Tracker->FirstPacket->Length <= DebugImmediateFrameSize + Chipset->GetTransmitHeaderSize();
-#endif
+			if (g_UsbEnetSettings.AggregateSmallOnly)
+				CanAppend = CanAppend && Length <= DebugImmediateFrameSize && Tracker->FirstPacket->Length <= DebugImmediateFrameSize + Chipset->GetTransmitHeaderSize();
 
 			if (CanAppend) {
 				SubmitTracker = FALSE;

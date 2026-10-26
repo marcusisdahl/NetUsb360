@@ -30,6 +30,8 @@
     <ProjectGuid>{08CE61F5-C3F3-4826-A529-1DC73BEF1482}</ProjectGuid>
     <Keyword>Xbox360Proj</Keyword>
     <ProjectName>CUsbEnet</ProjectName>
+    <!-- build.ps1 sets NetUsb360XexName and NetUsb360Defines for each release build; see README. -->
+    <NetUsb360XexName Condition="'$(NetUsb360XexName)'==''">NetUsb360.xex</NetUsb360XexName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'" Label="Configuration">
@@ -104,7 +106,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <LinkIncremental>false</LinkIncremental>
-    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\NetUsb360.xex</ImageXexOutput>
+    <ImageXexOutput>$(SolutionDir)Build\CUsbEnet\$(NetUsb360XexName)</ImageXexOutput>
     <OutDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\Build\CUsbEnet\$(Configuration)\</IntDir>
     <RemoteRoot>hdd:\</RemoteRoot>
@@ -235,7 +237,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <PrecompiledHeaderOutputFile>$(OutDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>NDEBUG;_XBOX</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_XBOX;$(NetUsb360Defines)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\libraries\xkelib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -318,6 +320,10 @@
     <ClInclude Include="Ax88178.h" />
     <ClInclude Include="Ax88179x_178A_772D.h" />
     <ClInclude Include="Rtl8153.h" />
+    <ClInclude Include="UsbEnetTransport.h" />
+    <ClInclude Include="KernelAddresses.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Status.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CNicBase.cpp" />
@@ -339,6 +345,9 @@
     <ClCompile Include="Ax88178.cpp" />
     <ClCompile Include="Ax88179x_178A_772D.cpp" />
     <ClCompile Include="Rtl8153.cpp" />
+    <ClCompile Include="KernelAddresses.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Status.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Xbox 360'">
     <ClCompile>

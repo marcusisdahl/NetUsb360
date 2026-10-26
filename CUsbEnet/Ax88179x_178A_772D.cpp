@@ -164,9 +164,10 @@ BOOL CAx88179::SupportsTransmitAggregation() const {
      * disabled, corrupting Netshare/XNet connections while USB still reported
      * successful completions.  That symptom matches the store-ordering race now
      * closed by the __sync() in SubmitXmitTrackerLocked, so aggregation can be
-     * re-tested with USBENET_AX88179_TX_AGGREGATION=1. Verify every byte with
-     * NetBench360's full data check before trusting such a build. */
-    return USBENET_AX88179_TX_AGGREGATION != 0;
+     * re-tested with Ax88179TxAggregation=1 in the settings file (default:
+     * USBENET_AX88179_TX_AGGREGATION). Verify every byte with NetBench360's
+     * full data check before trusting such a build. */
+    return g_UsbEnetSettings.Ax88179TxAggregation;
 }
 
 const char* CAx88178A::GetName() const {
