@@ -28,6 +28,6 @@
   </g>
   <rect x="24" y="112" width="30" height="10" rx="5" fill="#3ED9BC" opacity="0.6"/>
   <rect x="34" y="132" width="20" height="10" rx="5" fill="#3ED9BC" opacity="0.35"/>
-  <text x="290" y="150" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="112" font-weight="800" fill="#3ED9BC" font-style="italic">Usb<tspan fill="#73B8FF">Net360</tspan></text>
+  <text x="290" y="150" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="112" font-weight="800" fill="#3ED9BC" font-style="italic">Net<tspan fill="#73B8FF">Usb360</tspan></text>
   <text x="294" y="206" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="34" font-weight="500" fill="#8FA6BA">USB Ethernet for homebrew Xbox 360</text>
 </svg>
