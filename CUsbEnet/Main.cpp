@@ -212,6 +212,7 @@ namespace Main {
         PUSBD_DEVICE_NODE DeviceNode = g_UsbEnet.DeviceAttached != 0 ? g_UsbEnet.DeviceNode : NULL;
         DbgPrint("[CUsbEnet/Main] Removing hooks.\n");
         Hooks::Remove();
+        UsbEnetFlushXmitCompletions();
         if (InterlockedCompareExchange(&DriverRegistered, 0, 1) == 1) {
             PLIST_ENTRY Flink = g_EthernetUsbdDriverObject.RegisteredDriverListEntry.Flink;
             PLIST_ENTRY Blink = g_EthernetUsbdDriverObject.RegisteredDriverListEntry.Blink;

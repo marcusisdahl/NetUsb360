@@ -130,6 +130,136 @@ static BOOL ShouldLogDiagnosticEvent(DWORD Count) {
 	return Count <= 16 || ShouldLogDrop(Count);
 }
 
+/* NicXmit copies each frame into a USB buffer before it returns, so the frame
+ * can be handed back at once, but never from inside NicXmit itself. The
+ * built-in Emac completes later from its own DPC and callers depend on that:
+ * the original Xbox emulator's raw Ethernet intercept (xam
+ * NetDll_XnpEthernetInterceptXmit) hung the console when its completion ran
+ * inside its own send call. Completions are queued here and delivered, in
+ * order, from a DPC once the caller has left DISPATCH_LEVEL. */
+enum {
+	XmitCompletionQueueSize = 256
+};
+
+typedef struct _USBENET_XMIT_COMPLETION {
+	CNicUser* User;
+	PVOID CompletionContext;
+} USBENET_XMIT_COMPLETION;
+
+static USBENET_XMIT_COMPLETION g_XmitCompletions[XmitCompletionQueueSize];
+static DWORD g_XmitCompletionHead;
+static DWORD g_XmitCompletionCount;
+static BOOL g_XmitCompletionDraining;
+static KSPIN_LOCK g_XmitCompletionLock;
+static KDPC g_XmitCompletionDpc;
+static DWORD g_XmitCompletionOverflowCount;
+
+/* Runs at DISPATCH_LEVEL. One processor drains at a time, so users see their
+ * completions in submission order. A completion callback usually sends the
+ * next frame, which queues another completion; Budget bounds one DPC run.
+ * Returns TRUE when completions are left for a later run. */
+static BOOL DeliverQueuedXmitCompletions(DWORD Budget) {
+	BOOL MoreQueued;
+
+	KeAcquireSpinLockAtRaisedIrql(&g_XmitCompletionLock);
+
+	if (g_XmitCompletionDraining) {
+		KeReleaseSpinLockFromRaisedIrql(&g_XmitCompletionLock);
+		return FALSE;
+	}
+
+	g_XmitCompletionDraining = TRUE;
+
+	for (DWORD Delivered = 0; g_XmitCompletionCount != 0 && Delivered < Budget; Delivered++) {
+		USBENET_XMIT_COMPLETION Completion = g_XmitCompletions[g_XmitCompletionHead];
+
+		g_XmitCompletionHead = (g_XmitCompletionHead + 1) % XmitCompletionQueueSize;
+		--g_XmitCompletionCount;
+		KeReleaseSpinLockFromRaisedIrql(&g_XmitCompletionLock);
+
+		Completion.User->NotifyXmitComplete(Completion.CompletionContext);
+
+		KeAcquireSpinLockAtRaisedIrql(&g_XmitCompletionLock);
+	}
+
+	MoreQueued = g_XmitCompletionCount != 0;
+	g_XmitCompletionDraining = FALSE;
+	KeReleaseSpinLockFromRaisedIrql(&g_XmitCompletionLock);
+
+	return MoreQueued;
+}
+
+static VOID __fastcall XmitCompletionDpcRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2) {
+	const DWORD CompletionsPerDpc = 64;
+
+	UNREFERENCED_PARAMETER(DeferredContext);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
+
+	if (DeliverQueuedXmitCompletions(CompletionsPerDpc))
+		KeInsertQueueDpc(Dpc, NULL, NULL);
+}
+
+static VOID InitializeXmitCompletions() {
+	ZeroMemory(g_XmitCompletions, sizeof(g_XmitCompletions));
+	g_XmitCompletionHead = 0;
+	g_XmitCompletionCount = 0;
+	g_XmitCompletionDraining = FALSE;
+	g_XmitCompletionLock = 0;
+	g_XmitCompletionOverflowCount = 0;
+	KeInitializeDpc(&g_XmitCompletionDpc, (PKDEFERRED_ROUTINE)XmitCompletionDpcRoutine, NULL);
+}
+
+static VOID CompleteXmitLater(CNicUser* User, PVOID CompletionContext) {
+	KIRQL OldIrql = KfAcquireSpinLock(&g_XmitCompletionLock);
+
+	if (g_XmitCompletionCount == XmitCompletionQueueSize) {
+		++g_XmitCompletionOverflowCount;
+		KfReleaseSpinLock(&g_XmitCompletionLock, OldIrql);
+
+		if (ShouldLogDrop(g_XmitCompletionOverflowCount))
+			DbgPrint("[usbenet]: Transmit completion queue full (%u times); completing inline.\n", g_XmitCompletionOverflowCount);
+
+		User->NotifyXmitComplete(CompletionContext);
+		return;
+	}
+
+	DWORD Tail = (g_XmitCompletionHead + g_XmitCompletionCount) % XmitCompletionQueueSize;
+	g_XmitCompletions[Tail].User = User;
+	g_XmitCompletions[Tail].CompletionContext = CompletionContext;
+	++g_XmitCompletionCount;
+
+	KeInsertQueueDpc(&g_XmitCompletionDpc, NULL, NULL);
+	KfReleaseSpinLock(&g_XmitCompletionLock, OldIrql);
+}
+
+/* Delivers every queued completion before a user detaches or the driver
+ * unloads, waiting for a drain running on another processor to finish. */
+static VOID FlushQueuedXmitCompletions() {
+	const DWORD MaximumPassiveWaitPasses = 250;
+
+	for (DWORD Pass = 0;; Pass++) {
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+		DeliverQueuedXmitCompletions(XmitCompletionQueueSize);
+		KeAcquireSpinLockAtRaisedIrql(&g_XmitCompletionLock);
+		BOOL Idle = g_XmitCompletionCount == 0 && !g_XmitCompletionDraining;
+		KeReleaseSpinLockFromRaisedIrql(&g_XmitCompletionLock);
+		KfLowerIrql(OldIrql);
+
+		if (Idle || KeGetCurrentIrql() != PASSIVE_LEVEL || Pass >= MaximumPassiveWaitPasses)
+			return;
+
+		LARGE_INTEGER DelayInterval;
+		DelayInterval.QuadPart = -10000;
+		KeDelayExecutionThread(KernelMode, FALSE, &DelayInterval);
+	}
+}
+
+VOID __fastcall UsbEnetFlushXmitCompletions() {
+	KeRemoveQueueDpc(&g_XmitCompletionDpc);
+	FlushQueuedXmitCompletions();
+}
+
 static USHORT ReadNetworkU16(const BYTE* Buffer) {
 	return static_cast<USHORT>((static_cast<USHORT>(Buffer[0]) << 8) | Buffer[1]);
 }
@@ -1457,7 +1587,7 @@ ReleaseLock:
 	KfReleaseSpinLock(&NicLock, PreviousIrql);
 
 Complete:
-	User->NotifyXmitComplete(CompletionContext);
+	CompleteXmitLater(User, CompletionContext);
 #if USBENET_PERF_LOGGING
 	InterlockedExchangeAdd(reinterpret_cast<LONG*>(&XmitCpuTicks), static_cast<LONG>(__mftb() - XmitStart));
 #endif
@@ -1885,6 +2015,7 @@ VOID __fastcall CUsbEnet::DriverEntry() {
 
 	InitializeListHead(&m_UserList);
 	m_UserListLock = 0;
+	InitializeXmitCompletions();
 
 	ControlEvent.Header.Type = 1;
 	ControlEvent.Header.SignalState = 0;
@@ -2206,8 +2337,10 @@ BOOL __fastcall CUsbEnet::NicDetachUser(CNicUser* User) {
 	NULL_OWNER_THREAD(this);
 	KfReleaseSpinLock(&NicLock, PreviousIrql);
 
-	if (RemovedEntry != NULL)
+	if (RemovedEntry != NULL) {
+		FlushQueuedXmitCompletions();
 		ExFreePool(RemovedEntry);
+	}
 
 	return TRUE;
 }
