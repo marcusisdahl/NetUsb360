@@ -54,7 +54,7 @@ The plugin file is `NetUsb360.xex`. Coming from CUsbEnet? Put `NetUsb360.xex` in
 
 ## Quick start
 
-You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, or RGLoader) on dashboard/kernel **17559**, and a [supported adapter](#supported-adapters).
+You need an Xbox 360 that runs homebrew plugins (RGH/JTAG with DashLaunch, RGLoader, or a stock console with BadUpdate or ABadAvatar) on dashboard/kernel **17559**, and a [supported adapter](#supported-adapters).
 
 1. Download `NetUsb360.xex` from the [Releases page](https://github.com/marcusisdahl/NetUsb360/releases). See [Which file to use](#which-file-to-use) if you want the faster experimental build.
 2. Copy it to the console, for example to `Hdd:\Plugins\NetUsb360.xex`.
