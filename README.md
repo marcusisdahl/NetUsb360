@@ -191,6 +191,8 @@ These are compile-time options in `CUsbEnet/Main.h`. Every experimental switch i
 | `USBENET_TX_AGGREGATE_SMALL_ONLY` | `0` | Only packets up to 256 bytes share a transfer, and full-size packets still go one per transfer. Part of acksmall. |
 | `USBENET_AX88179_RX_26K` | `0` | 26 KiB receive transfers on the AX88179. No measurable gain. |
 | `USBENET_AX88179_RX_32K_UNTESTED` | `0` | 32 KiB receive transfers. Untested. Can't be combined with the 26 KiB switch. |
+| `USBENET_TX_MAX_PENDING` | `24` | The most USB transmit transfers in flight at once (2 to 64). **Experimental**, for a console that freezes during long transfers from the Xbox: try `4`. |
+| `USBENET_TX_DIRECT_SUBMIT` | `1` | `0` sends every transmit through the transmit DPC instead of submitting it straight away on USB processor 2. **Experimental**, for the same freeze. |
 | `USBENET_PERF_LOGGING` | `0` | Prints a speed, CPU and drop summary every five seconds. |
 | `USBENET_DEBUG` | `0` | Detailed driver output. Slows the driver down. |
 | `USBENET_CONNECTION_LOGGING` | `0` | Extra connection diagnostics. |

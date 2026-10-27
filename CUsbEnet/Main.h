@@ -61,6 +61,25 @@
 #error Choose at most one AX88179 RX transfer size.
 #endif
 
+// Experiment for the console that freezes on sustained Xbox->PC transfers:
+// the most USB transmit (bulk OUT) transfers in flight at once. 24 is the
+// normal value; a small number such as 4 keeps the host controller's
+// transmit queue short.
+#ifndef USBENET_TX_MAX_PENDING
+#define USBENET_TX_MAX_PENDING 24
+#endif
+
+#if USBENET_TX_MAX_PENDING < 2 || USBENET_TX_MAX_PENDING > 64
+#error USBENET_TX_MAX_PENDING must be 2 to 64.
+#endif
+
+// Experiment for the same freeze: 0 never submits a transmit straight from
+// NicXmit, even on USB processor 2 at DISPATCH_LEVEL; every transmit goes
+// through the transmit DPC instead.
+#ifndef USBENET_TX_DIRECT_SUBMIT
+#define USBENET_TX_DIRECT_SUBMIT 1
+#endif
+
 #ifndef USBENET_CONNECTION_LOGGING
 #define USBENET_CONNECTION_LOGGING 0
 #endif

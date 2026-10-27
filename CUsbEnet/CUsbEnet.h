@@ -35,9 +35,9 @@ enum {
     MaximumFramesPerXmit = 10,
     MaximumDebugFramesPerXmit = 8,
     DebugImmediateFrameSize = 256,
-    MaximumPendingXmitCount = 24,
+    MaximumPendingXmitCount = USBENET_TX_MAX_PENDING,
     MaximumTitlePendingXmitCount = MaximumPendingXmitCount - 1,
-    EnableDispatchLevelDirectXmit = 1, // Submit directly only when already on USB processor 2 at DISPATCH_LEVEL.
+    EnableDispatchLevelDirectXmit = USBENET_TX_DIRECT_SUBMIT, // Submit directly only when already on USB processor 2 at DISPATCH_LEVEL.
     TitleReceiveFilterMask = 0x1A,
     DebugReceiveFilterMask = 0x14,
     ThroughputStatsPeriod = 5000,
